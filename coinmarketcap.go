@@ -18,6 +18,9 @@ func GetMarketData() (GlobalMarketData, error) {
 	url := fmt.Sprintf(baseUrl + "/global/")
 
 	resp, err := makeReq(url)
+	if err != nil {
+		return GlobalMarketData{}, err
+	}
 
 	var data GlobalMarketData
 	err = json.Unmarshal(resp, &data)
@@ -53,6 +56,9 @@ func GetAllCoinData(limit int) (map[string]Coin, error) {
 	url := fmt.Sprintf("%s/ticker/%s", baseUrl, l)
 
 	resp, err := makeReq(url)
+	if err != nil {
+		return nil, err
+	}
 
 	var data []Coin
 	err = json.Unmarshal(resp, &data)
