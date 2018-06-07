@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -21,7 +22,6 @@ func GetMarketData() (GlobalMarketData, error) {
 	if err != nil {
 		return GlobalMarketData{}, err
 	}
-
 	var data GlobalMarketData
 	err = json.Unmarshal(resp, &data)
 	if err != nil {
@@ -48,32 +48,34 @@ func GetCoinData(coin string) (Coin, error) {
 }
 
 // Get information about all coins listed in Coin Market Cap.
-func GetAllCoinData(limit int) (map[string]Coin, error) {
+func GetAllCoinData(limit int) (symbolMap, nameMap map[string]*Coin, err error) {
 	var l string
 	if limit >= 0 {
 		l = fmt.Sprintf("?limit=%v", limit)
 	}
 	url := fmt.Sprintf("%s/ticker/%s", baseUrl, l)
 
-	resp, err := makeReq(url)
+	var resp []byte
+	resp, err = makeReq(url)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	var data []Coin
 	err = json.Unmarshal(resp, &data)
 	if err != nil {
-		return nil, err
+		return
 	}
 	// creating map from the array
-	allCoins := make(map[string]Coin)
+	symbolMap = make(map[string]*Coin)
+	nameMap = make(map[string]*Coin)
 	for i := 0; i < len(data); i++ {
 		if data[i].Symbol != "" {
-			allCoins[data[i].Symbol] = data[i]
+			symbolMap[data[i].Symbol] = &data[i]
+			nameMap[strings.ToLower(data[i].Name)] = &data[i]
 		}
 	}
-
-	return allCoins, nil
+	return
 }
 
 // Get graph data points for a crypto currency.
